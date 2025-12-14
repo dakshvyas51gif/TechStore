@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TechStore — Hybrid Light / Dark</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#6A74FF; --accent:#00E0FF; --success:#00C853; --danger:#FF5864;
+    --glass: rgba(255,255,255,0.06);
+    --glass-2: rgba(255,255,255,0.12);
+    --radius:14px;
+    --bg-dark: linear-gradient(135deg,#0a0a1f,#1a1a2e,#0f0f23);
+    --bg-light: linear-gradient(180deg,#f0f4ff,#ffffff);
+    --text-dark:#e9eefc; --muted-dark:#b8c0d9;
+  }
+  :root.light{
+    --primary:#3751FF; --accent:#00A8D9;
+    --text-dark:#0b1220; --muted-dark:#4b5566;
+    --glass: rgba(10,20,40,0.02); --glass-2: rgba(10,20,40,0.04);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:"Poppins",sans-serif}
+  html,body{height:100%}
+  body{
+    background:var(--bg-dark);
+    color:var(--text-dark);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    padding-bottom:40px;
+  }
+  .container{max-width:1200px;margin:20px auto;padding:0 16px}
+  header{display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:14px;background:var(--glass);border:1px solid rgba(255,255,255,0.06);backdrop-filter:blur(8px)}
+  /* TechStore logo block (your SVG + text) */
+  .ts-logo{display:flex;align-items:center;gap:12px}
+  .ts-logo svg{filter:drop-shadow(0 0 12px #b57aff) drop-shadow(0 0 22px #7a3cff);width:55px;height:55px}
+  .ts-text h1{margin:0;font-size:22px;font-weight:800;background:linear-gradient(90deg,#fff,#cfcfff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .ts-text p{margin:0;font-size:12px;color:var(--muted-dark)}
+  .header-actions{display:flex;gap:10px;align-items:center}
+  .btn{padding:10px 14px;border-radius:12px;border:none;background:linear-gradient(90deg,var(--primary),var(--accent));color:white;font-weight:700;cursor:pointer}
+  /* Filters */
+  .filters{margin-top:16px;padding:14px;border-radius:12px;background:var(--glass);display:flex;gap:12px;flex-wrap:wrap}
+  .filters input,.filters select{padding:12px;border-radius:12px;border:none;background:rgba(255,255,255,0.03);color:inherit;min-width:160px}
+  /* Products grid & card */
+  .products{margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+  .card{background:var(--glass);border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.04);transition:transform .2s;display:flex;flex-direction:column}
+  .card:hover{transform:translateY(-8px)}
+  .card img{width:100%;height:170px;object-fit:contain;border-radius:10px;background:rgba(255,255,255,0.03)}
+  .card h3{margin:10px 0 6px;color:var(--accent);font-size:16px}
+  .price{font-weight:800;color:var(--primary)}
+  .card .card-row{display:flex;gap:8px;align-items:center;margin-top:8px}
+  /* Cart drawer */
+  .cart-drawer{position:fixed;right:-420px;top:0;height:100%;width:380px;padding:18px;background:linear-gradient(180deg, rgba(0,0,0,0.7), rgba(0,0,0,0.45));color:var(--text-dark);box-shadow:-12px 0 40px rgba(0,0,0,0.6);backdrop-filter:blur(16px);transition:right .36s;z-index:120;border-left:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column}
+  .cart-drawer.open{right:0}
+  .cart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .cart-back{background:transparent;border:none;color:var(--muted-dark);font-weight:700;cursor:pointer;padding:8px 10px;border-radius:10px}
+  .cart-items{flex:1;overflow:auto;padding-right:6px}
+  .cart-item{display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;background:rgba(255,255,255,0.02);margin-bottom:10px;border:1px solid rgba(255,255,255,0.02)}
+  .cart-item img{width:64px;height:64px;object-fit:contain;border-radius:8px;background:var(--glass)}
+  .item-info h4{margin:0;color:var(--accent);font-size:14px}
+  .item-info p{margin:4px 0 0;color:var(--muted-dark);font-size:13px}
+  .controls{display:flex;align-items:center;gap:8px}
+  .qbtn{padding:6px 9px;border-radius:8px;border:none;background:rgba(255,255,255,0.06);cursor:pointer}
+  .remove{background:transparent;border:none;color:var(--danger);font-weight:800;cursor:pointer}
+  .cart-footer{padding-top:10px;border-top:1px solid rgba(255,255,255,0.04)}
+  .total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-weight:800;font-size:18px}
+  .checkout{width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(90deg,var(--success),#00E676);color:white;font-weight:800;cursor:pointer}
+  /* Modal (product / login / order) */
+  .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);z-index:200}
+  .modal.open{display:flex}
+  .modal-card{width:92%;max-width:560px;background:var(--glass);border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.04)}
+  .modal-card img{width:100%;height:300px;object-fit:contain;border-radius:8px}
+  /* Auth modal specifics */
+  .auth-box{width:92%;max-width:460px;background:var(--glass);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.04)}
+  .role-tabs{display:flex;margin-bottom:14px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.03)}
+  .role-tab{flex:1;padding:10px;text-align:center;cursor:pointer;font-weight:700}
+  .role-tab.active{background:var(--primary);color:white}
+  .auth-box input{width:100%;padding:12px;margin:8px 0;border-radius:10px;border:none;background:rgba(255,255,255,0.03);color:inherit}
+  .back-btn{position:absolute;top:10px;left:10px;background:rgba(255,255,255,0.06);border:none;color:inherit;padding:8px 10px;border-radius:8px;cursor:pointer}
+  /* Order tracking */
+  .tracker{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:12px}
+  .step{flex:1;text-align:center;padding:8px;border-radius:10px;background:rgba(255,255,255,0.03);font-weight:700}
+  .step.active{background:linear-gradient(90deg,var(--primary),var(--accent));color:white;box-shadow:0 8px 20px rgba(0,0,0,0.4)}
+  /* responsive */
+  @media (max-width:720px){
+    .cart-drawer{width:100%;right:-100%}
+    .card img{height:160px}
+    .modal-card img{height:220px}
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="ts-logo">
+      <!-- Your provided SVG logo -->
+      <svg width="55" height="55" viewBox="0 0 100 100" role="img" aria-label="TechStore logo">
+        <defs>
+          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ff59f8"/>
+            <stop offset="50%" stop-color="#8f6bff"/>
+            <stop offset="100%" stop-color="#3cbaff"/>
+          </linearGradient>
+        </defs>
+        <rect x="10" y="10" width="80" height="80" rx="22" fill="url(#grad1)" opacity="0.25" />
+        <rect x="20" y="20" width="60" height="60" rx="18" fill="url(#grad1)" stroke="white" stroke-width="3"/>
+        <line x1="20" y1="50" x2="80" y2="50" stroke="white" stroke-width="4" stroke-linecap="round"/>
+        <line x1="50" y1="20" x2="50" y2="80" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <div class="ts-text">
+        <h1>TechStore</h1>
+        <p>Premium Laptops & Mobiles</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn" id="themeToggle" title="Toggle dark/light">Dark / Light</button>
+      <button class="btn" id="loginTrigger">Login / Register</button>
+      <button class="btn" id="openCartBtn">Cart <span id="cartBadge" style="background:#ff4757;padding:3px 8px;border-radius:12px;margin-left:8px">0</span></button>
+    </div>
+  </header>
+
+  <div class="filters" aria-label="filters">
+    <input id="search" placeholder="Search products..." oninput="render()" />
+    <select id="category" onchange="render()">
+      <option value="all">All Categories</option>
+      <option value="laptop">Laptops</option>
+      <option value="mobile">Mobiles</option>
+    </select>
+    <select id="sort" onchange="render()">
+      <option value="default">Sort By</option>
+      <option value="low">Price: Low → High</option>
+      <option value="high">Price: High → Low</option>
+    </select>
+  </div>
+
+  <div id="productList" class="products" aria-live="polite"></div>
+</div>
+
+<!-- CART DRAWER -->
+<aside id="cartDrawer" class="cart-drawer" aria-hidden="true">
+  <div class="cart-head">
+    <h2>Your Cart</h2>
+    <div>
+      <button class="cart-back" id="cartBack">← Back</button>
+      <button class="cart-back" id="clearCartBtn" title="Clear cart" style="margin-left:6px">Clear</button>
+    </div>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer">
+    <div class="total-row"><span>Total</span><span id="cartTotal">₹0</span></div>
+    <button class="checkout" id="checkoutBtn">Checkout & Track Order</button>
+  </div>
+</aside>
+
+<!-- PRODUCT / GENERIC MODAL -->
+<div id="modal" class="modal" role="dialog" aria-modal="true">
+  <div class="modal-card" id="modalCard"></div>
+</div>
+
+<!-- AUTH (login/register) modal -->
+<div id="authModal" class="modal" aria-hidden="true">
+  <div class="modal-card auth-box" role="form">
+    <button class="back-btn" id="authBack">Back</button>
+    <h2 style="text-align:center;color:var(--accent);margin-bottom:8px">Welcome</h2>
+    <div class="role-tabs">
+      <div class="role-tab active" id="tabCustomer">Customer</div>
+      <div class="role-tab" id="tabSeller">Seller</div>
+    </div>
+    <input type="text" id="fullName" placeholder="Full Name" />
+    <input type="tel" id="mobile" placeholder="Mobile Number" />
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <input type="text" id="address" placeholder="Address (optional)" />
+    <button id="authSubmit" style="margin-top:10px">Continue</button>
+  </div>
+</div>
+
+<!-- ORDER TRACKING modal -->
+<div id="trackModal" class="modal" aria-hidden="true">
+  <div class="modal-card" style="max-width:640px">
+    <h2 style="color:var(--accent)">Order Tracking</h2>
+    <p id="orderInfo" style="color:var(--muted-dark)">Order ID: <span id="orderIdText">—</span></p>
+    <div class="tracker" id="tracker">
+      <div class="step" data-step="0">Placed</div>
+      <div class="step" data-step="1">Processing</div>
+      <div class="step" data-step="2">Shipped</div>
+      <div class="step" data-step="3">Out for delivery</div>
+      <div class="step" data-step="4">Delivered</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn" id="prevStep">Prev</button>
+      <button class="btn" id="nextStep">Next</button>
+      <div style="flex:1"></div>
+      <button class="btn" id="closeTrack" style="background:#444">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ----------------- DATA & IMAGES ----------------- */
+/* Starting 6 real-style postimg links; rest reuse and fallback onerror to placeholder.
+   I intentionally included many postimg links from earlier messages — onerror fallback will prevent broken UI. */
+const images = [
+  "https://i.postimg.cc/Xrg6p56f/dell.avif","https://i.postimg.cc/jwDjHcRc/hp.jpg","https://i.postimg.cc/ZBWq8HJX/mackbook-pro.jpg",
+  "https://i.postimg.cc/vg4mrhGr/iphone-14.jpg","https://i.postimg.cc/cgvJRhdF/s23.jpg","https://i.postimg.cc/ZBWq8HJF/Google-Pixel-7-featured-image-packshot-review.jpg"
+];
+// generate 50 product objects (mix laptops and mobiles)
+const products = [];
+const names = ["Dell XPS","HP Spectre","MacBook Pro","iPhone","Samsung Galaxy","Google Pixel","OnePlus","Asus ROG","Lenovo ThinkPad","Acer Nitro","MSI Stealth","Redmi Note","Realme GT","Vivo X","Oppo Find","Nothing Phone","iQOO Pro","Xiaomi","Poco","Infinix"];
+for (let i=0;i<50;i++){
+  const isLaptop = i < 25;
+  const name = names[i % names.length] + " " + (isLaptop ? "2024" : "2025");
+  const price = isLaptop ? 50000 + (i*620) : 15000 + (i*300);
+  // cycle images array to keep same style; many will be duplicates but valid links exist for first few; fallback covers the rest
+  const img = images[i % images.length];
+  products.push({ id: i+1, name, price, category: isLaptop ? "laptop" : "mobile", img });
+}
+
+/* ----------------- STATE ----------------- */
+let cart = JSON.parse(localStorage.getItem('ts_cart') || '[]');
+let theme = localStorage.getItem('ts_theme') || 'dark';
+const currencyFormatter = new Intl.NumberFormat('en-IN');
+
+/* ----------------- THEME ----------------- */
+function applyTheme(){
+  if (theme === 'light') document.documentElement.classList.add('light');
+  else document.documentElement.classList.remove('light');
+  localStorage.setItem('ts_theme', theme);
+}
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  theme = theme === 'dark' ? 'light' : 'dark';
+  applyTheme();
+});
+applyTheme();
+
+/* ----------------- RENDER PRODUCTS ----------------- */
+function render(){
+  const q = (document.getElementById('search').value || '').toLowerCase();
+  const cat = document.getElementById('category').value;
+  const sort = document.getElementById('sort').value;
+  let f = products.filter(p => p.name.toLowerCase().includes(q) && (cat === 'all' || p.category === cat));
+  if (sort === 'low') f.sort((a,b)=>a.price-b.price);
+  if (sort === 'high') f.sort((a,b)=>b.price-a.price);
+  const el = document.getElementById('productList');
+  if (f.length === 0) {
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted-dark)">No products found.</div>';
+    return;
+  }
+  el.innerHTML = f.map(p => `
+    <div class="card" role="article">
+      <img src="${p.img}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/400x300/222/fff?text=No+Image'">
+      <h3>${p.name}</h3>
+      <div class="price">₹${currencyFormatter.format(p.price)}</div>
+      <div class="card-row">
+        <button class="btn" onclick="openProduct(${p.id})">View</button>
+        <button class="btn" style="background:#444" onclick="addToCart(${p.id})">Add to Cart</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ----------------- PRODUCT MODAL ----------------- */
+function openProduct(id){
+  const p = products.find(x=>x.id===id);
+  const modal = document.getElementById('modal');
+  const card = document.getElementById('modalCard');
+  card.innerHTML = `
+    <h2 style="color:var(--accent);margin:4px 0">${p.name}</h2>
+    <img src="${p.img}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/600x400/222/fff?text=No+Image'">
+    <p style="color:var(--muted-dark);margin-top:10px">Category: ${p.category}</p>
+    <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
+      <div style="font-weight:800;font-size:20px;color:var(--primary)">₹${currencyFormatter.format(p.price)}</div>
+      <div style="flex:1"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn" style="flex:1" onclick="addToCart(${p.id}); closeModal()">Add to Cart</button>
+      <button class="btn" style="flex:1;background:#444" onclick="closeModal()">Close</button>
+    </div>
+  `;
+  openModal('modal');
+}
+
+/* ----------------- MODAL UTILS (disable scroll when modal open) ----------------- */
+function openModal(id){ document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeModal(){ document.getElementById('modal').classList.remove('open'); document.body.style.overflow = ''; }
+function openAuth(){ document.getElementById('authModal').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeAuth(){ document.getElementById('authModal').classList.remove('open'); document.body.style.overflow = ''; }
+function openTrack(){ document.getElementById('trackModal').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeTrack(){ document.getElementById('trackModal').classList.remove('open'); document.body.style.overflow = ''; }
+
+/* ----------------- CART ----------------- */
+function saveCart(){ localStorage.setItem('ts_cart', JSON.stringify(cart)); updateCartUI(); }
+function updateCartUI(){
+  const badge = document.getElementById('cartBadge');
+  const totalItems = cart.reduce((s,i)=>s+i.qty,0);
+  badge.textContent = totalItems;
+  badge.style.display = totalItems>0 ? 'inline-block' : 'none';
+  const itemsEl = document.getElementById('cartItems');
+  if (cart.length===0){
+    itemsEl.innerHTML = '<div style="text-align:center;color:var(--muted-dark);padding:18px">Your cart is empty.</div>';
+    document.getElementById('cartTotal').textContent = '₹0';
+    return;
+  }
+  let total = 0;
+  itemsEl.innerHTML = cart.map(ci => {
+    const p = products.find(x=>x.id===ci.id);
+    const line = p.price * ci.qty; total += line;
+    return `<div class="cart-item">
+      <img src="${p.img}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/150x120/222/fff?text=No+Image'">
+      <div class="item-info">
+        <h4>${p.name}</h4>
+        <p>₹${currencyFormatter.format(line)}</p>
+      </div>
+      <div class="controls">
+        <button class="qbtn" onclick="changeQty(${p.id}, -1)">-</button>
+        <div style="min-width:22px;text-align:center">${ci.qty}</div>
+        <button class="qbtn" onclick="changeQty(${p.id}, 1)">+</button>
+        <button class="remove" onclick="removeItem(${p.id})" title="Remove">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('cartTotal').textContent = '₹' + currencyFormatter.format(total);
+}
+
+function addToCart(id){
+  const idx = cart.findIndex(c=>c.id===id);
+  if (idx === -1) cart.push({id, qty:1});
+  else cart[idx].qty += 1;
+  saveCart();
+  openCart(); // show drawer
+}
+function changeQty(id, delta){
+  const idx = cart.findIndex(c=>c.id===id);
+  if (idx === -1) return;
+  cart[idx].qty += delta;
+  if (cart[idx].qty <= 0) cart.splice(idx,1);
+  saveCart();
+}
+function removeItem(id){ cart = cart.filter(c=>c.id!==id); saveCart(); }
+function clearCart(){ if(!confirm('Clear cart?')) return; cart=[]; saveCart(); }
+
+/* ----------------- CART DRAWER CONTROLS ----------------- */
+const cartDrawer = document.getElementById('cartDrawer');
+function openCart(){ cartDrawer.classList.add('open'); cartDrawer.setAttribute('aria-hidden','false'); updateCartUI(); document.body.style.overflow='hidden'; }
+function closeCart(){ cartDrawer.classList.remove('open'); cartDrawer.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
+
+document.getElementById('openCartBtn').addEventListener('click', openCart);
+document.getElementById('cartBack').addEventListener('click', closeCart);
+document.getElementById('clearCartBtn').addEventListener('click', clearCart);
+document.getElementById('checkoutBtn').addEventListener('click', ()=>{
+  if (cart.length === 0) return alert('Cart empty!');
+  // Simulate order placement and open tracker
+  const orderId = 'TS' + Date.now().toString().slice(-6);
+  localStorage.setItem('last_order', JSON.stringify({ id: orderId, step: 0 }));
+  openTrack();
+  document.getElementById('orderIdText').textContent = orderId;
+  setTracker(0);
+  // empty cart after placing order
+  cart = []; saveCart(); closeCart();
+});
+
+/* ----------------- AUTH (front-end only: Option A) ----------------- */
+document.getElementById('loginTrigger').addEventListener('click', openAuth);
+document.getElementById('authBack').addEventListener('click', closeAuth);
+document.getElementById('tabCustomer').addEventListener('click', ()=>switchRole('customer'));
+document.getElementById('tabSeller').addEventListener('click', ()=>switchRole('seller'));
+function switchRole(role){
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(role === 'seller' ? 'tabSeller' : 'tabCustomer').classList.add('active');
+  // subtle UI change: when seller selected, change auth modal color accent
+  if (role === 'seller') document.querySelector('.auth-box').style.borderColor = 'rgba(82,200,255,0.12)';
+  else document.querySelector('.auth-box').style.borderColor = 'rgba(255,255,255,0.04)';
+}
+document.getElementById('authSubmit').addEventListener('click', ()=>{
+  const name = document.getElementById('fullName').value.trim();
+  const mobile = document.getElementById('mobile').value.trim();
+  const email = document.getElementById('email').value.trim();
+  if (!name || !mobile || !email) return alert('Please fill required fields.');
+  localStorage.setItem('ts_user', JSON.stringify({ name, mobile, email }));
+  document.getElementById('loginTrigger').textContent = 'Hi, ' + name.split(' ')[0];
+  closeAuth();
+});
+
+/* ----------------- ORDER TRACKER ----------------- */
+let currentStep = 0;
+function setTracker(step){
+  currentStep = step;
+  const steps = document.querySelectorAll('#tracker .step');
+  steps.forEach(s => {
+    const idx = parseInt(s.getAttribute('data-step'),10);
+    s.classList.toggle('active', idx <= step);
+  });
+}
+document.getElementById('nextStep').addEventListener('click', ()=>{
+  if (currentStep < 4) currentStep++;
+  setTracker(currentStep);
+});
+document.getElementById('prevStep').addEventListener('click', ()=>{
+  if (currentStep > 0) currentStep--;
+  setTracker(currentStep);
+});
+document.getElementById('closeTrack').addEventListener('click', ()=>{ closeTrack(); });
+
+/* ----------------- UTIL ----------------- */
+function resetFilters(){ document.getElementById('search').value=''; document.getElementById('category').value='all'; document.getElementById('sort').value='default'; render(); }
+
+/* Close modals when clicking outside modal card */
+document.getElementById('modal').addEventListener('click', (e)=>{ if (e.target === e.currentTarget) closeModal(); });
+document.getElementById('authModal').addEventListener('click', (e)=>{ if (e.target === e.currentTarget) closeAuth(); });
+document.getElementById('trackModal').addEventListener('click', (e)=>{ if (e.target === e.currentTarget) closeTrack(); });
+
+/* ----------------- INIT ----------------- */
+render();
+updateCartUI();
+
+/* Restore last order tracking if exists */
+const lastOrder = JSON.parse(localStorage.getItem('last_order')||'null');
+if (lastOrder){
+  document.getElementById('orderIdText').textContent = lastOrder.id;
+  setTracker(lastOrder.step || 0);
+}
+</script>
+</body>
+</html>
